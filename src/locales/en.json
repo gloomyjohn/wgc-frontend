@@ -1,0 +1,25 @@
+{
+  "simulator": {
+    "title": "🚖 Driver Simulator",
+    "online": "Online",
+    "offline": "Offline",
+    "driverId": "Driver ID",
+    "currentLocation": "Current Location",
+    "passengerLocation": "Passenger Location",
+    "distance": "Distance",
+    "addPassenger": "Add Passenger",
+    "removePassenger": "Remove",
+    "centerPassenger": "Center",
+    "start": "Start",
+    "stop": "Stop",
+    "reset": "Reset",
+    "center": "Center",
+    "otherDriversVisible": "Other drivers visible",
+    "followRoads": "Follow road network",
+    "show": "Show",
+    "hide": "Hide",
+    "language": "Language",
+    "goOnline": "Go Online",
+    "goOffline": "Go Offline"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "simulator": {
+    "title": "🚖 司机模拟驾驶舱",
+    "online": "在线 (Online)",
+    "offline": "离线 (Offline)",
+    "driverId": "司机 ID",
+    "currentLocation": "当前位置",
+    "passengerLocation": "乘客位置",
+    "distance": "距离",
+    "addPassenger": "获取乘客",
+    "removePassenger": "移除",
+    "centerPassenger": "居中",
+    "start": "开始",
+    "stop": "停止",
+    "reset": "重置",
+    "center": "居中",
+    "otherDriversVisible": "其他司机可见",
+    "followRoads": "按路网驱动",
+    "show": "显示",
+    "hide": "隐藏",
+    "language": "语言",
+    "goOnline": "上班上线",
+    "goOffline": "停止下班"
+  }
+}
