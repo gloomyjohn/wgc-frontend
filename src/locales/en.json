@@ -21,5 +21,47 @@
     "language": "Language",
     "goOnline": "Go Online",
     "goOffline": "Go Offline"
+  },
+  "dashboard": {
+    "title": "📊 Singapore Fleet Monitor",
+    "refreshList": "Refresh list",
+    "table": {
+      "id": "ID",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "actions": {
+      "track": "📍 Track",
+      "showTarget": "🎯 Show target",
+      "hideTarget": "🙈 Hide target"
+    },
+    "map": {
+      "title": "🇸🇬 Singapore Operation Center",
+      "onlineDrivers": "Online drivers",
+      "lastUpdate": "Last update"
+    },
+    "messages": {
+      "noLocation": "This driver has no location data",
+      "offlineConfirmMessage": "This driver is offline. Track last known location?",
+      "offlineConfirmTitle": "Driver Offline",
+      "offlineConfirmConfirm": "Track",
+      "offlineConfirmCancel": "Cancel",
+      "targetPopup": "🎯 Target: {lat}, {lon}"
+    },
+    "search": {
+      "placeholder": "Search driver ID"
+    },
+    "autoRefresh": "Auto-refreshing",
+    "popups": {
+      "driverId": "Driver ID: {id}",
+      "offlineDriverId": "(Offline) Driver ID: {id}"
+    },
+    "messages": {
+      "fetchFailed": "Failed to fetch driver list. Please try again later"
+    }
   }
 }

@@ -68,7 +68,7 @@
                                 {{ isOnline ? $t('simulator.goOffline') : $t('simulator.goOnline') }}
                             </el-button>
 
-                            <el-button type="success" :disabled="!isOnline" @click="startSimulation">
+                            <el-button type="success" :disabled="!isOnline || !hasPassenger" @click="startSimulation">
                                 ▶️ {{ $t('simulator.start') }}
                             </el-button>
 
@@ -152,6 +152,11 @@ const otherDriversFollowRoads = ref(false)
 // 路由服务（使用 OSRM demo 公共端点，受限于可用性与速率限制）
 const ROUTING_BASE = 'https://router.project-osrm.org'
 
+// 模拟器移动配置
+const SIM_INTERVAL_MS = 600 // 模拟更新间隔（毫秒）
+const SIM_SPEED_MPS = 6 // 移动速度（米/秒），可根据需要调整
+const ARRIVAL_THRESHOLD_M = 8 // 到达乘客位置的阈值（米）
+
 
 
 const passengerDistance = computed(() => {
@@ -172,6 +177,9 @@ const passengerDistance = computed(() => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return Math.round(R * c)
 })
+
+// 是否已有乘客（用于 UI 控制：开始按钮在获得乘客前不可用）
+const hasPassenger = computed(() => Boolean(passengerLat.value && passengerLon.value))
 
 // --- 初始化地图 ---
 const initMap = () => {
@@ -273,33 +281,92 @@ const toggleOnline = () => {
 const startSimulation = () => {
     if (simulationTimer) return; // 防止重复点击
 
+    // 在没有乘客时禁止启动并给出提示
+    if (!passengerLat.value || !passengerLon.value) {
+        ElMessage.warning({ message: '请先添加乘客' })
+        return
+    }
+
     console.log("开始模拟行程...")
 
-    // 模拟一条向右上角移动的路线
+    // 按乘客位置移动的模拟路线
     simulationTimer = setInterval(() => {
-        // 1. 改变坐标 (模拟移动)
-        currentLat.value += 0.0005
-        currentLon.value += 0.0005
-
-        // 2. 更新地图上的点和轨迹
-        if (driverMarker) {
-            driverMarker.setLatLng([currentLat.value, currentLon.value])
-            // 平滑移动并居中显示
-            map.panTo([currentLat.value, currentLon.value], { animate: true, duration: 0.5 })
+        // 如果乘客被移除，停止模拟并提示
+        if (!passengerLat.value || !passengerLon.value) {
+            ElMessage.info({ message: '乘客已取消，停止行程' })
+            stopSimulation()
+            return
         }
 
-        // 可选：如果你希望减少上报频率，可以改为批量或节流上报（示例：每 3 次上报一次）
-        // 更新其他司机与自己的相对显示（可扩展）
-        // 目前其他司机独立移动，不需要特别同步，但可以在此处添加碰撞或优先级逻辑
+        const targetLat = passengerLat.value
+        const targetLon = passengerLon.value
 
-        // 3. 🔥 调用你的后端 API (上报位置)
-        reportLocationToBackend()
+        // 计算与目标的距离（米）
+        let distMeters = null
+        if (map && map.distance) {
+            try {
+                distMeters = map.distance([currentLat.value, currentLon.value], [targetLat, targetLon])
+            } catch (e) {
+                distMeters = null
+            }
+        }
+        if (distMeters === null) {
+            // haversine 退路
+            const toRad = d => d * Math.PI / 180
+            const R = 6371000
+            const dLat = toRad(targetLat - currentLat.value)
+            const dLon = toRad(targetLon - currentLon.value)
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(currentLat.value)) * Math.cos(toRad(targetLat)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+            distMeters = Math.round(R * c)
+        }
 
-        // 也可以异步不阻塞主流程（根据需求决定是否等待）
-        drivers.updateLocation(driverId.value, { lat: currentLat.value, lon: currentLon.value }).catch(err => {
+        // 到达检查
+        if (distMeters <= ARRIVAL_THRESHOLD_M) {
+            currentLat.value = targetLat
+            currentLon.value = targetLon
+            if (driverMarker) driverMarker.setLatLng([currentLat.value, currentLon.value])
+            if (map) map.panTo([currentLat.value, currentLon.value], { animate: true, duration: 0.5 })
+            pathCoords.push([currentLat.value, currentLon.value])
+            if (pathPolyline) pathPolyline.setLatLngs(pathCoords)
+            updatePassengerLine()
+            reportLocationToBackend()
+            drivers.updateLocation(driverId.value, { lat: currentLat.value, lon: currentLon.value }).catch(err => {
+                console.warn('drivers.updateLocation failed (silent):', err)
+            })
+            ElMessage.success({ message: '已抵达乘客位置' })
+            stopSimulation()
+            return
+        }
+
+        // 按速度移动（线性插值）
+        const stepMeters = SIM_SPEED_MPS * (SIM_INTERVAL_MS / 1000)
+        const frac = Math.min(1, stepMeters / distMeters)
+        currentLat.value += (targetLat - currentLat.value) * frac
+        currentLon.value += (targetLon - currentLon.value) * frac
+
+        // 更新地图与轨迹
+        if (driverMarker) {
+            driverMarker.setLatLng([currentLat.value, currentLon.value])
+            map.panTo([currentLat.value, currentLon.value], { animate: true, duration: 0.5 })
+        }
+        pathCoords.push([currentLat.value, currentLon.value])
+        if (pathPolyline) pathPolyline.setLatLngs(pathCoords)
+        updatePassengerLine()
+
+        // 上报位置
+        // reportLocationToBackend()
+        drivers.updateLocation(
+            {
+                driverId:10001,
+                latitude:  currentLat.value,
+                longitude: currentLon.value
+            }
+        ).catch(err => {
             console.warn('drivers.updateLocation failed (silent):', err)
         })
-    })
+
+    }, SIM_INTERVAL_MS)
 }
 
 // 停止模拟并清理定时器
@@ -535,15 +602,16 @@ const onToggleOtherDrivers = (val) => {
 // --- 对接后端 (RabbitMQ/Redis) ---
 const reportLocationToBackend = async () => {
     try {
-        const url = `http://localhost:8080/api/drivers/${driverId.value}/location`
+        const url = `http://localhost:8080/api/v1/drivers/location/update`
         const payload = {
-            lat: currentLat.value,
-            lon: currentLon.value
+            driverId: 10001,
+            latitude: currentLat.value,
+            longitude: currentLon.value
         }
 
         // 发送请求
         await axios.post(url, payload)
-        console.log(`位置上报成功: ${payload.lat}, ${payload.lon}`)
+        console.log(`位置上报成功: ${payload.latitude}, ${payload.longitude}`)
 
     } catch (error) {
         console.error("位置上报失败:", error)

@@ -21,5 +21,47 @@
     "language": "语言",
     "goOnline": "上班上线",
     "goOffline": "停止下班"
+  },
+  "dashboard": {
+    "title": "📊 新加坡运力监控",
+    "refreshList": "刷新列表",
+    "table": {
+      "id": "ID",
+      "status": "状态",
+      "actions": "操作"
+    },
+    "status": {
+      "online": "在线",
+      "offline": "离线"
+    },
+    "actions": {
+      "track": "📍 追踪",
+      "showTarget": "🎯 显示目标",
+      "hideTarget": "🙈 隐藏目标"
+    },
+    "map": {
+      "title": "🇸🇬 新加坡运营中心",
+      "onlineDrivers": "在线司机",
+      "lastUpdate": "更新时间"
+    },
+    "messages": {
+      "noLocation": "该司机暂无位置数据",
+      "offlineConfirmMessage": "该司机已经下线，是否追踪其最后已知位置？",
+      "offlineConfirmTitle": "司机已离线",
+      "offlineConfirmConfirm": "确定追踪",
+      "offlineConfirmCancel": "取消",
+      "targetPopup": "🎯 目标: {lat}, {lon}"
+    },
+    "search": {
+      "placeholder": "搜索司机 ID"
+    },
+    "autoRefresh": "自动刷新中",
+    "popups": {
+      "driverId": "司机 ID: {id}",
+      "offlineDriverId": "(离线) 司机 ID: {id}"
+    },
+    "messages": {
+      "fetchFailed": "获取司机列表失败，请稍后重试"
+    }
   }
 }
