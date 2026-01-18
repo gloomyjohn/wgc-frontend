@@ -11,7 +11,13 @@ export const updateStatus = (driver) => {
   return api.post(`/v1/drivers/update`,  driver )
 }
 
+// 请求乘客（获取随机乘客坐标）
+export const requestPassenger = (payload) => {
+  return api.post('/v1/drivers/requestPassenger', payload)
+}
+
 export default {
   updateLocation,
   updateStatus,
+  requestPassenger,
 }

@@ -431,11 +431,27 @@ const addPassengerAt = (lat, lon) => {
     passengerLine = L.polyline([[currentLat.value, currentLon.value], [lat, lon]], { color: '#409eff', weight: 3, opacity: 0.9, dashArray: '6,6' }).addTo(map)
 }
 
-const addRandomPassenger = () => {
-    // 随机放在司机附近 +/- ~1km 范围内
-    const offsetLat = (Math.random() - 0.5) * 0.02
-    const offsetLon = (Math.random() - 0.5) * 0.02
-    addPassengerAt(currentLat.value + offsetLat, currentLon.value + offsetLon)
+const addRandomPassenger = async () => {
+    try {
+        // 调用后端接口获取乘客坐标
+        const res = await drivers.requestPassenger({
+            driverId: 10001,
+            latitude: currentLat.value,
+            longitude: currentLon.value
+        })
+        
+        // 后端返回 Result.success(passengerLocation)，其中 passengerLocation 是 [lat, lon]
+        if (res && res.data && res.data.data) {
+            const [lat, lon] = res.data.data
+            addPassengerAt(lat, lon)
+            ElMessage.success({ message: '已获取乘客' })
+        } else {
+            ElMessage.warning({ message: '获取乘客失败' })
+        }
+    } catch (error) {
+        console.error('获取乘客失败:', error)
+        ElMessage.error({ message: '获取乘客失败' })
+    }
 }
 
 const removePassenger = () => {
